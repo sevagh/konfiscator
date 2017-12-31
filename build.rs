@@ -16,7 +16,7 @@ type Result<T> = result::Result<T, Box<io::Error>>;
 
 fn main() {
     let cwd = env::current_dir().unwrap();
-    let cflags = env::var("CFLAGS").unwrap_or_default();
+    let cflags = env::var("CFLAGS").unwrap_or(String::from("-g"));
 
     let mut c_files_vec = vec![];
     _find_c_files(&cwd, &mut c_files_vec);
@@ -37,14 +37,14 @@ fn main() {
 
     _inject_env_var(pppid, "LD_PRELOAD", "");
 
-    println!(
-        "{}",
-        String::from_utf8(
-            _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout), None)
-                .unwrap()
-                .stdout
-        ).unwrap()
-    );
+    let gcc_out = _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout), None).unwrap();
+
+    if !gcc_out.status.success() {
+        panic!(format!(
+            "gcc command failed: {:#?}\n",
+            String::from_utf8(gcc_out.stderr)
+        ));
+    }
 
     _inject_env_var(
         pppid,
