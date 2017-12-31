@@ -15,7 +15,7 @@ use nix::unistd::getppid;
 type Result<T> = result::Result<T, Box<io::Error>>;
 
 fn main() {
-    let cwd = env::current_dir().expect("Couldn't get $CWD");
+    let cwd = env::current_dir().unwrap();
     let cflags = env::var("CFLAGS").unwrap_or_default();
 
     let mut c_files_vec = vec![];
@@ -23,9 +23,7 @@ fn main() {
 
     let mut cout_pathbuf = cwd.clone();
     cout_pathbuf.push("malloc");
-    let cout = cout_pathbuf
-        .to_str()
-        .expect("Couldn't convert out path to str");
+    let cout = cout_pathbuf.to_str().unwrap();
 
     let cfiles = c_files_vec
         .iter()
@@ -34,12 +32,19 @@ fn main() {
         .collect::<Vec<&str>>()
         .join(" ");
 
-    let cargo_profile = env::var("PROFILE").expect("Cargo env var $PROFILE not defined");
-    let pppid = _pppid().expect("Couldn't get parent-parent-pid");
+    let cargo_profile = env::var("PROFILE").unwrap();
+    let pppid = _pppid().unwrap();
 
     _inject_env_var(pppid, "LD_PRELOAD", "");
 
-    _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout), None).expect("Error invoking gcc");
+    println!(
+        "{}",
+        String::from_utf8(
+            _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout), None)
+                .unwrap()
+                .stdout
+        ).unwrap()
+    );
 
     _inject_env_var(
         pppid,
@@ -75,7 +80,7 @@ fn _exec(command: &str, stdin: Option<&str>) -> Result<Output> {
 fn _find_c_files(path: &PathBuf, files: &mut Vec<PathBuf>) {
     if let Ok(paths) = read_dir(path) {
         for p in paths {
-            let path = p.expect("error iterating through paths").path();
+            let path = p.unwrap().path();
             if !path.is_dir() {
                 match path.extension().and_then(OsStr::to_str) {
                     Some("c") => files.push(path),
@@ -113,8 +118,7 @@ fn _pppid() -> Result<i32> {
 
 fn _inject_env_var(pid: i32, k: &str, v: &str) {
     let gdb_in = format!("attach {}\ncall putenv (\"{}={}\")\ndetach\n", pid, k, v);
-    _exec(&format!("gdb"), Some(&gdb_in))
-        .expect(&format!("Error invoking gdb with script {}", gdb_in));
+    _exec(&format!("gdb"), Some(&gdb_in)).unwrap();
 }
 
 fn io_errorify(e: ParseIntError) -> Box<io::Error> {

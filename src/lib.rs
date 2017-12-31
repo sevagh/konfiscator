@@ -2,10 +2,10 @@
 
 extern crate libc;
 
-use libc::{c_void, PT_NULL};
+use libc::{c_void, size_t};
 
 #[no_mangle]
-pub extern "C" fn malloc(size: usize) -> *mut c_void {
-    println!("Hello world! {}", size);
-    PT_NULL as *mut c_void
+pub extern "C" fn malloc(size: size_t) -> *mut c_void {
+    println!("Hello world from KONFISCATOR! {}", size);
+    unsafe { libc::malloc(size) }
 }
