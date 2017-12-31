@@ -4,37 +4,68 @@ use std::env;
 use std::fs::read_dir;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 use std::result;
-use std::io::{self, BufRead};
-use nix::unistd::getppid;
+use std::io::{self, BufRead, Write};
+use std::num::ParseIntError;
 use std::fs::File;
+
+use nix::unistd::getppid;
 
 type Result<T> = result::Result<T, Box<io::Error>>;
 
 fn main() {
-    let mut cwd = env::current_dir().expect("Couldn't get $CWD");
+    let cwd = env::current_dir().expect("Couldn't get $CWD");
     let cflags = env::var("CFLAGS").unwrap_or_default();
 
     let mut c_files_vec = vec![];
     _find_c_files(&cwd, &mut c_files_vec);
 
-    cwd.push("malloc");
-    let cout = cwd.to_str().expect("Couldn't convert out path to str");
+    let mut cout_pathbuf = cwd.clone();
+    cout_pathbuf.push("malloc");
+    let cout = cout_pathbuf
+        .to_str()
+        .expect("Couldn't convert out path to str");
 
-    let cfiles = c_files_vec.iter().map(PathBuf::as_path).filter_map(Path::to_str).collect::<Vec<&str>>().join(" ");
+    let cfiles = c_files_vec
+        .iter()
+        .map(PathBuf::as_path)
+        .filter_map(Path::to_str)
+        .collect::<Vec<&str>>()
+        .join(" ");
 
-    _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout)).expect("Error invoking gcc");
+    _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout), None).expect("Error invoking gcc");
 
-    _pppid();
+    if let Ok(pppid) = _pppid() {
+        _inject_env_var(
+            pppid,
+            "HELLO_WORLD",
+            &vec!["debug", "release"]
+                .iter()
+                .map(|x| format!("{}/target/{}/libkonfiscator.so", cwd.to_string_lossy(), x))
+                .collect::<Vec<String>>()
+                .join(","),
+        );
+    }
 }
 
-fn _exec(cmd: &str) -> Result<Output> {
-    Command::new("sh")
-        .arg("-c")
-        .arg(cmd)
-        .output()
-        .map_err(Box::new)
+fn _exec(command: &str, stdin: Option<&str>) -> Result<Output> {
+    let mut cmd = Command::new("sh");
+
+    cmd.arg("-c").arg(command);
+
+    cmd.stdin(Stdio::piped());
+    let mut chld = cmd.spawn().unwrap();
+
+    if let Some(contents) = stdin {
+        chld.stdin
+            .as_mut()
+            .unwrap()
+            .write_all(contents.as_bytes())
+            .unwrap();
+    }
+
+    chld.wait_with_output().map_err(Box::new)
 }
 
 fn _find_c_files(path: &PathBuf, files: &mut Vec<PathBuf>) {
@@ -43,9 +74,7 @@ fn _find_c_files(path: &PathBuf, files: &mut Vec<PathBuf>) {
             let path = p.expect("error iterating through paths").path();
             if !path.is_dir() {
                 match path.extension().and_then(OsStr::to_str) {
-                    Some("c") => {
-                        files.push(path)
-                    },
+                    Some("c") => files.push(path),
                     _ => continue,
                 }
             }
@@ -60,19 +89,30 @@ fn _pppid() -> Result<i32> {
     let buf = io::BufReader::new(file);
 
     let pppid_out = buf.lines()
-        .filter_map(|l| {
-            match l {
-                Ok(x) => {
-                    if x.contains("PPid:") {
-                        return Some(x)
-                    }
-                    None
+        .filter_map(|l| match l {
+            Ok(x) => {
+                if x.contains("PPid:") {
+                    return Some(x);
                 }
-                _ => None
+                None
             }
+            _ => None,
         })
-        .collect::<Vec<String>>().join("");
+        .collect::<Vec<String>>()
+        .join("");
 
-    println!("My pppid is: {}", pppid_out);
-    Ok(0)
+    match pppid_out.split_whitespace().last() {
+        Some(x) => x.parse::<i32>().map_err(io_errorify),
+        None => panic!(),
+    }
+}
+
+fn _inject_env_var(pid: i32, k: &str, v: &str) {
+    let gdb_in = format!("attach {}\ncall putenv (\"{}={}\")\ndetach\n", pid, k, v);
+    _exec(&format!("gdb"), Some(&gdb_in))
+        .expect(&format!("Error invoking gdb with script {}", gdb_in));
+}
+
+fn io_errorify(e: ParseIntError) -> Box<io::Error> {
+    Box::new(io::Error::new(io::ErrorKind::Other, e))
 }
