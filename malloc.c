@@ -1,5 +1,6 @@
 #include "./malloc.h"
 
-void main() {
+int main() {
     malloc(555);
+    return 0;
 }

@@ -34,22 +34,23 @@ fn main() {
         .collect::<Vec<&str>>()
         .join(" ");
 
+    let cargo_profile = env::var("PROFILE").expect("Cargo env var $PROFILE not defined");
+    let pppid = _pppid().expect("Couldn't get parent-parent-pid");
+
+    _inject_env_var(pppid, "LD_PRELOAD", "");
+
     _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout), None).expect("Error invoking gcc");
 
-    let cargo_profile = env::var("PROFILE").expect("Cargo env var $PROFILE not defined");
-
-    if let Ok(pppid) = _pppid() {
-        _inject_env_var(
-            pppid,
-            "LD_PRELOAD",
-            &vec!["debug", "release"]
-                .iter()
-                .filter(|x| **x == cargo_profile)
-                .map(|x| format!("{}/target/{}/libkonfiscator.so", cwd.to_string_lossy(), x))
-                .collect::<Vec<String>>()
-                .join(","),
-        );
-    }
+    _inject_env_var(
+        pppid,
+        "LD_PRELOAD",
+        &vec!["debug", "release"]
+            .iter()
+            .filter(|x| **x == cargo_profile)
+            .map(|x| format!("{}/target/{}/libkonfiscator.so", cwd.to_string_lossy(), x))
+            .collect::<Vec<String>>()
+            .join(","),
+    );
 }
 
 fn _exec(command: &str, stdin: Option<&str>) -> Result<Output> {
