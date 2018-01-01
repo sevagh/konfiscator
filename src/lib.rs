@@ -6,6 +6,10 @@ extern crate alloc;
 extern crate libc;
 
 pub mod vec;
+pub mod libc_malloc;
 
 #[cfg(feature = "vec")]
-pub use vec::{free, malloc};
+pub use vec::*;
+
+#[cfg(feature = "libc_malloc")]
+pub use libc_malloc::*;

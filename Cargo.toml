@@ -15,5 +15,6 @@ libc = "0.2"
 nix = "0.9"
 
 [features]
-default = ["vec"]
+default = ["libc_malloc"]
 vec = []
+libc_malloc = []
