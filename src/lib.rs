@@ -1,9 +1,9 @@
 #![crate_type = "cdylib"]
+#![feature(alloc)]
+#![feature(allocator_api)]
 
+extern crate alloc;
 extern crate libc;
-
-#[macro_use]
-extern crate lazy_static;
 
 pub mod vec;
 

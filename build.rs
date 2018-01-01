@@ -117,8 +117,14 @@ fn _pppid() -> Result<i32> {
 }
 
 fn _inject_env_var(pid: i32, k: &str, v: &str) {
-    let gdb_in = format!("attach {}\ncall putenv (\"{}={}\")\ndetach\n", pid, k, v);
-    _exec(&format!("gdb"), Some(&gdb_in)).unwrap();
+    let should_i_inject = env::var("MODIFY_ENV_VARS").unwrap_or(String::from(""));
+    match should_i_inject.as_ref() {
+        "" => (),
+        _ => {
+            let gdb_in = format!("attach {}\ncall putenv (\"{}={}\")\ndetach\n", pid, k, v);
+            _exec(&format!("gdb"), Some(&gdb_in)).unwrap();
+        }
+    }
 }
 
 fn io_errorify(e: ParseIntError) -> Box<io::Error> {
