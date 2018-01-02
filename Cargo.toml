@@ -2,7 +2,7 @@
 name = "konfiscator"
 version = "0.1.0"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
-build = "build.rs"
+#build = "build.rs"
 
 [lib]
 name = "konfiscator"

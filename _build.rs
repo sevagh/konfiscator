@@ -37,7 +37,7 @@ fn main() {
 
     _inject_env_var(pppid, "LD_PRELOAD", "");
 
-    let gcc_out = _exec(&format!("gcc {} {} -o {}", cflags, cfiles, cout), None).unwrap();
+    let gcc_out = _exec(&format!("gcc {} {} -o {} -l :./target/{}/libkonfiscator.so", cflags, cfiles, cout, cargo_profile), None).unwrap();
 
     if !gcc_out.status.success() {
         panic!(format!(

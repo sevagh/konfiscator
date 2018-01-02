@@ -11,5 +11,6 @@ _ld_preload_env="LD_PRELOAD=${_ld_preload_so_file}"
 
 _rand_malloc=$(shuf -i 500-5000 -n 1)
 
+sh -c "gcc -g malloc.c -o malloc -L./target/debug/ -lkonfiscator -Wl,-rpath ./target/debug"
 sh -c "${_ld_preload_env} ${_mtrace_env} ./malloc ${_rand_malloc}"
 sh -c "mtrace ./malloc ${_mtrace_fname} ; rm -rf ${_mtrace_fname}"
