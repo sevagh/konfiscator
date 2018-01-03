@@ -1,15 +1,16 @@
 #![crate_type = "cdylib"]
+#![no_std]
 
 extern crate libc;
 
-#[cfg(feature = "vec")]
-pub mod vec;
+#[cfg(feature = "sbrk")]
+pub mod sbrk;
 
-#[cfg(feature = "vec")]
-pub use vec::*;
+#[cfg(feature = "sbrk")]
+pub use sbrk::*;
 
-#[cfg(feature = "libc_malloc")]
-pub mod libc_malloc;
+#[cfg(feature = "mmap")]
+pub mod mmap;
 
-#[cfg(feature = "libc_malloc")]
-pub use libc_malloc::*;
+#[cfg(feature = "mmap")]
+pub use mmap::*;

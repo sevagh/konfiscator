@@ -3,11 +3,17 @@ An educational attempt to implement malloc.
 * https://www.cs.cmu.edu/~bryant/pubdir/sigcse18.pdf
 * https://www.gnu.org/software/libc/manual/html_node/Replacing-malloc.html
 
-==========
-LD_PRELOAD
-==========
+++++++++
+nostdlib
+++++++++
 
-So I do some disgusting things with gdb and LD_PRELOAD.
+* https://doc.rust-lang.org/1.1.0/book/no-stdlib.html
+
++++++++++++++++++++
+build.rs - OUTDATED
++++++++++++++++++++
+
+So I do some disgusting things with gdb and LD_PRELOAD from build.rs:
 
 * Get parent pid of calling `cargo` command from build.rs using nix::getppid
 * Get parent of `cargo` from `/proc/$ppid/status`, a.k.a. pppid (parent-parent-pid)

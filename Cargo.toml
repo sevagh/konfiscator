@@ -2,7 +2,6 @@
 name = "konfiscator"
 version = "0.1.0"
 authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
-#build = "build.rs"
 
 [lib]
 name = "konfiscator"
@@ -10,11 +9,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 libc = "0.2"
-
-[build-dependencies]
 nix = "0.9"
 
 [features]
-default = ["libc_malloc"]
-vec = []
-libc_malloc = []
+default = ["sbrk"]
+sbrk = []
+mmap = []
