@@ -3,14 +3,18 @@
 
 extern crate libc;
 
-#[cfg(feature = "sbrk")]
-pub mod sbrk;
+#[macro_use]
+extern crate cfg_if;
 
-#[cfg(feature = "sbrk")]
-pub use sbrk::*;
-
-#[cfg(feature = "mmap")]
-pub mod mmap;
-
-#[cfg(feature = "mmap")]
-pub use mmap::*;
+cfg_if! {
+    if #[cfg(feature = "libc_malloc")] {
+        pub mod libc_malloc;
+        pub use libc_malloc::*;
+    } else if #[cfg(feature = "sbrk")] {
+        extern crate sbrsk;
+        pub mod sbrk;
+        pub use sbrk::*;
+    } else {
+        unimplemented!("unsupported feature");
+    }
+}

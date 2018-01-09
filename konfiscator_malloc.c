@@ -1,7 +1,6 @@
-#include "./malloc.h"
+#include "./konfiscator_malloc.h"
 #include <errno.h>
 #include <stdio.h>
-#include <mcheck.h>
 #include <stdlib.h>
 
 int main(int argc, char **argv)
@@ -17,10 +16,15 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    mtrace();
-    void *x = malloc(desired_size);
-    free(x);
-    muntrace();
+    printf("Using desired size: %lu\n", desired_size);
+
+    char *x = konfiscator_malloc(desired_size);
+    if (x == NULL) {
+	    fprintf(stderr, "konfiscator_malloc error\n");
+    }
+    for (int i = 0; i < desired_size; ++i)
+	    x[i] = 'a';
+    konfiscator_free(x);
 
     return 0;
 }
