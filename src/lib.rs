@@ -2,19 +2,21 @@
 #![no_std]
 
 extern crate libc;
+extern crate sbrsk;
 
-#[macro_use]
-extern crate cfg_if;
+use libc::{c_void, size_t, PT_NULL};
 
-cfg_if! {
-    if #[cfg(feature = "libc_malloc")] {
-        pub mod libc_malloc;
-        pub use libc_malloc::*;
-    } else if #[cfg(feature = "sbrk")] {
-        extern crate sbrsk;
-        pub mod sbrk;
-        pub use sbrk::*;
-    } else {
-        unimplemented!("unsupported feature");
-    }
+#[no_mangle]
+pub extern "C" fn konfiscator_malloc(size: size_t) -> *mut c_void {
+    let ret = match sbrsk::sbrk(size) {
+        Ok(x) => x as u32,
+        Err(sbrsk::Error::ENOMEM) => PT_NULL,
+    };
+    ret as *mut c_void
+}
+
+#[no_mangle]
+pub extern "C" fn konfiscator_free(ptr: *mut c_void) {
+    let _ = ptr;
+    ()
 }

@@ -9,11 +9,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 libc = "0.2"
-cfg-if = "0.1"
-sbrsk = { version = "0.1.0", optional = true }
-
-[features]
-default = ["sbrk"]
-sbrk = ["sbrsk"]
-mmap = []
-libc_malloc = []
+sbrsk = "0.1.0"
