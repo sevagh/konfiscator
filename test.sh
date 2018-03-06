@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sh -c "cargo clean && cargo build"
+sh -c "cargo clean && cargo build -p konfiscator"
 
 _rand_malloc=$(shuf -i 500-5000 -n 1)
 _bin_name="./konfiscator_malloc"

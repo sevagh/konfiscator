@@ -1,0 +1,9 @@
+[package]
+name = "sbrsk"
+version = "0.1.0"
+authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
+description = "brk and sbrk in Rust"
+license = "GPL-3.0"
+
+[dependencies]
+sc = "0.2.2"

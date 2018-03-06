@@ -1,12 +1,2 @@
-[package]
-name = "konfiscator"
-version = "0.1.0"
-authors = ["Sevag Hanssian <sevag.hanssian@gmail.com>"]
-
-[lib]
-name = "konfiscator"
-crate-type = ["cdylib"]
-
-[dependencies]
-libc = "0.2"
-sbrsk = "0.1.0"
+[workspace]
+members = ["konfiscator", "sbrsk"]
