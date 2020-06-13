@@ -10,4 +10,6 @@ echo "hello from real malloc"
 LD_PRELOAD=/libkonfiscator.so echo "hello from konfiscator"
 LD_PRELOAD=/libkonfiscator.so /a.out
 
-echo "konfiscator exit"
+echo "konfiscator test done, exporting metrics"
+
+/prometheus-metrics/metrics.py
