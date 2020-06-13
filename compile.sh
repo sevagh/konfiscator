@@ -39,6 +39,7 @@ CFLAGS="$CFLAGS -Winit-self"
 CFLAGS="$CFLAGS -Wno-strict-aliasing"
 CFLAGS="$CFLAGS -fno-strict-aliasing"
 CFLAGS="$CFLAGS -Wno-implicit-fallthrough"
+CFLAGS="$CFLAGS -fPIC"
 
 LIB="libkonfiscator.so"
 
@@ -49,7 +50,7 @@ for src in "${SRC[@]}"; do
     OBJ="$OBJ $src.o"
 done
 #"$AR" rcs "$LIB" $OBJ
-"$CC" -fPIC -shared $OBJ -o "$LIB"
+"$CC" -shared $OBJ -o "$LIB"
 
 DEPS=""
 
