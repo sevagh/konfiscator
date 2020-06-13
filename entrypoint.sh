@@ -12,4 +12,4 @@ LD_PRELOAD=/libkonfiscator.so /a.out
 
 echo "konfiscator test done, exporting metrics"
 
-/prometheus-metrics/metrics.py
+/prometheus-metrics/konfiscator_metrics.py
