@@ -4,16 +4,16 @@ if [ -f config.sh ]; then
     source ./config.sh
 fi
 
-set -o errexit -o nounset -o pipefail # -o xtrace
+set -o errexit -o nounset -o pipefail -o xtrace
 
 : ${PREFIX:="."}
 : ${INSTALL:="."}
 
 declare -a SRC
-SRC=( list )
+SRC=( konfiscator )
 
 declare -a TEST
-TEST=( list )
+TEST=(  )
 
 declare -a BENCH
 BENCH=(  )
@@ -27,7 +27,7 @@ CFLAGS=${CFLAGS:-}
 CFLAGS="$CFLAGS -ggdb -O3 -march=native -pipe -std=gnu11 -D_GNU_SOURCE -pthread"
 CFLAGS="$CFLAGS -I${PREFIX}/src"
 
-CFLAGS="$CFLAGS -Wall -Wextra"
+CFLAGS="$CFLAGS -Wall -Wextra -Werror"
 CFLAGS="$CFLAGS -Wundef"
 CFLAGS="$CFLAGS -Wcast-align"
 CFLAGS="$CFLAGS -Wwrite-strings"
@@ -40,7 +40,7 @@ CFLAGS="$CFLAGS -Wno-strict-aliasing"
 CFLAGS="$CFLAGS -fno-strict-aliasing"
 CFLAGS="$CFLAGS -Wno-implicit-fallthrough"
 
-LIB="libkonfiscator.a"
+LIB="libkonfiscator.so"
 
 OBJ=""
 for src in "${SRC[@]}"; do
@@ -48,16 +48,17 @@ for src in "${SRC[@]}"; do
     "$CC" -c -o "$src.o" "${PREFIX}/src/$src.c" $CFLAGS
     OBJ="$OBJ $src.o"
 done
-"$AR" rcs "$LIB" $OBJ
+#"$AR" rcs "$LIB" $OBJ
+"$CC" -fPIC -shared $OBJ -o "$LIB"
 
 DEPS=""
 
 #"$CC" -c -o test.o "${PREFIX}/test/test.c" $CFLAGS
 #TEST_DEPS="test.o $LIB $DEPS -lcmocka"
-TEST_DEPS="$LIB $DEPS -lcmocka"
+TEST_DEPS="-L. -lkonfiscator -Wl,-R. $DEPS -lcmocka"
 
 #"$CC" -c -o bench.o "${PREFIX}/test/bench.c" $CFLAGS
-BENCH_DEPS="$LIB $DEPS -lcmocka"
+BENCH_DEPS="-L. -lkonfiscator -Wl,-R. $DEPS -lcmocka"
 
 #"$CC" -c -o example "${PREFIX}/test/example.c" $DEPS $CFLAGS
 
