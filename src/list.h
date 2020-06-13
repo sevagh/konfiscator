@@ -317,8 +317,8 @@ static inline void list_splice_init(struct list_head *list,
 
 /**
  * list_for_each_entry_safe_continue -	iterate over list of given type
- *			continuing after existing point safe against removal of list
- *entry
+ *			continuing after existing point safe against removal of
+ *list entry
  * @pos:	the type * to use as a loop counter.
  * @n:		another type * to use as temporary storage
  * @head:	the head for your list.

@@ -4,7 +4,7 @@ if [ -f config.sh ]; then
     source ./config.sh
 fi
 
-set -o errexit -o nounset -o pipefail -o xtrace
+set -o errexit -o nounset -o pipefail #-o xtrace
 
 : ${PREFIX:="."}
 : ${INSTALL:="."}

@@ -1,5 +1,7 @@
 2020 do-over - replace malloc with a basic fit-free list implementation in C.
 
+Not thread-safe.
+
 Implementation goals:
 1. Implement basic "first-fit free list" malloc from https://embeddedartistry.com/blog/2017/02/15/implementing-malloc-first-fit-free-list/ - use the kernel doubly linked list
 2. Follow along the book [Modern C](https://modernc.gforge.inria.fr/) to write good quality C (or, at least, better than my usual)
