@@ -68,8 +68,7 @@ version() {
 }
 
 do_fmt() {
-    astyle --style=linux src/*.c
-    astyle --style=linux src/*.h
+    clang-format -i src/*.[ch]
 }
 
 do_install() {
