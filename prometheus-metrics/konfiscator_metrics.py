@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 
 from prometheus_client import start_http_server, Gauge
-from ctypes import CDLL, Structure, c_int
 import time
+import mmap
 
-class KonfiscatorStats(Structure):
-    _fields_ = [
-        ('mallocs', c_int),
-        ('frees', c_int),
-        ('mmaps', c_int),
-        ('defrags', c_int),
-    ]
+KONFISCATOR_STATS_FILE = '/tmp/konfiscator-stats'
+
 
 if __name__ == '__main__':
     konfiscator_mallocs = Gauge(
@@ -30,16 +25,22 @@ if __name__ == '__main__':
         "konfiscator defragged blocks",
     )
 
-    konfiscator_lib = CDLL("/libkonfiscator.so")
-    konfiscator_lib.konfiscator_get_stats.restype = KonfiscatorStats
-
+    print("starting up prometheus metrics endpoint")
     start_http_server(8000)
 
-    while True:
-        # recheck konfiscator stats, expose as metrics
-        ks = konfiscator_lib.konfiscator_get_stats()
-        konfiscator_mallocs.set(ks.mallocs)
-        konfiscator_mmaps.set(ks.mmaps)
-        konfiscator_frees.set(ks.frees)
-        konfiscator_defrags.set(ks.defrags)
-        time.sleep(5)
+    with open(KONFISCATOR_STATS_FILE, 'r+') as f:
+        mm = mmap.mmap(f.fileno(), 0)
+        while True:
+            print("updating konfiscator stats")
+            mm.seek(0)
+            for i in range(4):
+                if i == 0:
+                    konfiscator_mallocs.set(int(mm.readline()))
+                elif i == 1:
+                    konfiscator_mmaps.set(int(mm.readline()))
+                elif i == 2:
+                    konfiscator_frees.set(int(mm.readline()))
+                elif i == 3:
+                    konfiscator_defrags.set(int(mm.readline()))
+            time.sleep(5)
+        mm.close()

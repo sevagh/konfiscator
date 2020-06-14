@@ -1,35 +1,33 @@
-#include "konfiscator.h"
-#include "konfiscator_stats.h"
+#include <errno.h>
+#include <string.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
-// use the linux kernel doubly linked list
+#include "konfiscator.h"
 #include "list.h"
 
-// for uintptr_t
-#include <stdint.h>
-
-// for mmap system calls
-#include <sys/mman.h>
+// https://www.cs.yale.edu/homes/aspnes/pinewiki/C(2f)Persistence.html
+#define NUM_COUNTERS (4)
+#define COUNTER_FILE "/tmp/konfiscator-stats"
+#define NEW_COUNTER_FILE COUNTER_FILE "~"
 
 #define ALLOC_HEADER_SZ offsetof(alloc_node_t, block)
 #define MIN_ALLOC_SZ ALLOC_HEADER_SZ + 32
+#define FIRST_BLOCK_SIZE 1024*1024
 
-/**
- * Simple macro for making sure memory addresses are aligned
- * to the nearest power of two
- */
 #ifndef align_up
 #define align_up(num, align) (((num) + ((align)-1)) & ~((align)-1))
 #endif
 
 static LIST_HEAD(free_list);
 
-static int METRIC_MALLOCS = 0;
-static int METRIC_FREES = 0;
-static int METRIC_DEFRAGS = 0;
-static int METRIC_MMAPS = 0;
-
 // forward declarations
 void defrag_free_list(void);
+void increment_metric(int);
 
 typedef struct {
   struct list_head node;
@@ -37,13 +35,13 @@ typedef struct {
   char *block;
 } alloc_node_t;
 
-#define FIRST_BLOCK_SIZE 1024*1024
+enum metric_index { mallocs, frees, defrags, mmaps };
 
-void *malloc(size_t size) {
+void *malloc1(size_t size) {
   if (list_empty(&free_list)) {
     void *addr = mmap((void *)0, FIRST_BLOCK_SIZE, PROT_READ + PROT_WRITE,
                       MAP_ANONYMOUS + MAP_SHARED, -1, 0);
-    METRIC_MMAPS += 1;
+    increment_metric(mmaps);
 
     // not doing munmap cause apparently it's done automatically
     if (addr == MAP_FAILED) {
@@ -77,15 +75,15 @@ void *malloc(size_t size) {
 
   list_del(&blk->node);
 
-  METRIC_MALLOCS += 1;
+  increment_metric(mallocs);
   return ptr;
 }
 
 void free(void *ptr) {
-  if (!ptr)
+  if (!ptr) {
     return;
-
-  METRIC_FREES += 1;
+  }
+  increment_metric(frees);
 
   alloc_node_t *blk, *free_blk;
 
@@ -111,7 +109,7 @@ blockadded:
 void defrag_free_list(void) {
   alloc_node_t *block, *last_block = NULL, *t;
 
-  METRIC_DEFRAGS += 1;
+  increment_metric(defrags);
 
   list_for_each_entry_safe(block, t, &free_list, node) {
     if (last_block) {
@@ -126,11 +124,23 @@ void defrag_free_list(void) {
   }
 }
 
-konfiscator_stats_t konfiscator_get_stats(void) {
-	return (konfiscator_stats_t) {
-		.mallocs = METRIC_MALLOCS,
-		.mmaps = METRIC_MMAPS,
-		.frees = METRIC_FREES,
-		.defrags = METRIC_DEFRAGS
-	};
+void increment_metric(int metric_index) {
+    /* open and map the file */
+    int *counts;
+    int fd = open(COUNTER_FILE, O_RDWR);
+    if (fd < 0) {
+	    return;
+    }
+
+    // don't need PROT_READ, want to share it
+    counts = mmap(0, sizeof(*counts) * NUM_COUNTERS, PROT_WRITE, MAP_SHARED, fd, 0);
+
+    if (counts == 0) {
+	    return;
+    }
+
+    ++counts[metric_index];
+
+    munmap(counts, sizeof(*counts) * NUM_COUNTERS);
+    close(fd);
 }

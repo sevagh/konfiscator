@@ -7,7 +7,7 @@ COPY entrypoint.sh /entrypoint.sh
 COPY ./libkonfiscator.so /libkonfiscator.so
 COPY driver-program /driver-program
 COPY prometheus-metrics /prometheus-metrics
-COPY src/konfiscator_stats.h /driver-program/konfiscator_stats.h
+COPY empty-stats /tmp/konfiscator-stats
 
 RUN python3 -m pip install prometheus_client
 

@@ -4,8 +4,6 @@
 #include <memory.h>
 #include <stdio.h>
 
-#include "konfiscator_stats.h"
-
 int main(void)
 {
 	int *ints = malloc(50*sizeof(int));
