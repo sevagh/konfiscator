@@ -1,6 +1,4 @@
-/target/
-**/*.rs.bk
-Cargo.lock
-target
-konfiscator_malloc
-Cargo.lock
+/*.a
+/*.o
+/*.so
+/test_*
