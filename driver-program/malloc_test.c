@@ -1,5 +1,3 @@
-/* from https://raw.githubusercontent.com/embeddedartistry/embedded-resources/master/examples/c/malloc_test.c */
-
 #include <stdlib.h>
 #include <memory.h>
 #include <stdio.h>

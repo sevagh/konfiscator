@@ -65,11 +65,3 @@ konfiscator_free_total 2.0
 # TYPE konfiscator_defrag_total gauge
 konfiscator_defrag_total 0.0
 ```
-
-Try running some other GNU program, e.g. `ls`, but with the minimal api implemented it won't be so easy:
-
-```
-[root@e5668ad09f0f /]# LD_PRELOAD=/libkonfiscator.so ls
-realloc(): invalid pointer
-Aborted (core dumped)
-```
